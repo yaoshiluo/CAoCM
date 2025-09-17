@@ -3,8 +3,8 @@ from peft import PeftModel
 import torch
 
 # Paths to the base model and LoRA adapter
-base_model_path = "~/.cache/huggingface/hub/models--Qwen--Qwen1.5-1.8B-Chat/snapshots/e482ee3f73c375a627a16fdf66fd0c8279743ca6"
-adapter_path = "output"
+base_model_path = "/home/fortiss/.cache/huggingface/hub/models--Qwen--Qwen1.5-1.8B-Chat/snapshots/e482ee3f73c375a627a16fdf66fd0c8279743ca6"
+adapter_path = "/home/fortiss/minimind/qwen_lora_medical/output_prompt"
 
 # Load tokenizer
 tokenizer = AutoTokenizer.from_pretrained(base_model_path, trust_remote_code=True)

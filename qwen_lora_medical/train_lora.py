@@ -8,17 +8,16 @@ from transformers import DataCollatorForSeq2Seq
 
 project_root = os.path.abspath(os.path.dirname(__file__))
 
-# 训练数据 & 输出路径
+# Training data & output path
 data_path = os.path.join(project_root, "data/medical_o1_sft_with_prompt.jsonl")
-output_dir = os.path.join(project_root, "output")
+output_dir = os.path.join(project_root, "output_prompt")
 
 model_name = "Qwen/Qwen1.5-1.8B-Chat"
 tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 model = AutoModelForCausalLM.from_pretrained(model_name, trust_remote_code=True)
 
 
-
-# LoRA 配置
+# LoRA configuration
 peft_config = LoraConfig(
     r=8,
     lora_alpha=16,
@@ -30,7 +29,7 @@ peft_config = LoraConfig(
 
 model = get_peft_model(model, peft_config)
 
-# 加载数据集（JSONL，每行为 {"messages": [...] }）
+# Load dataset (JSONL, each line is {"messages": [...] })
 dataset = load_dataset("json", data_files=data_path)["train"]
 
 def format_prompt(example):
@@ -46,7 +45,7 @@ def format_prompt(example):
     return {
         "input_ids": tokens["input_ids"],
         "attention_mask": tokens["attention_mask"],
-        "labels": tokens["input_ids"][:]  # 复制一份，后续 pad
+        "labels": tokens["input_ids"][:]  # copy for padding later
     }
 
 
@@ -60,7 +59,7 @@ data_collator = DataCollatorForSeq2Seq(
     return_tensors="pt"
 ) 
 
-# 训练参数（根据显存调节）
+# Training arguments (adjust according to GPU memory)
 training_args = TrainingArguments(
     output_dir=output_dir,
     per_device_train_batch_size=2,
@@ -75,7 +74,7 @@ training_args = TrainingArguments(
     report_to="none"
 )
 
-# Trainer 启动训练
+# Start training with Trainer
 trainer = Trainer(
     model=model,
     args=training_args,
@@ -86,8 +85,8 @@ trainer = Trainer(
 trainer.train(resume_from_checkpoint=True)
 
 
-# 保存最终 LoRA 微调模型（增量）
+# Save the final LoRA fine-tuned model (delta weights)
 model.save_pretrained(output_dir)
 tokenizer.save_pretrained(output_dir)
 
-print("LoRA 微调完成，模型保存在:", output_dir)
+print("LoRA fine-tuning finished. Model saved to:", output_dir)
